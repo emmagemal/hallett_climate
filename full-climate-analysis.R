@@ -371,16 +371,14 @@ minor <- seq(1965, 2015, by = 5)   # making minor gridlines for the plot
                     scale_shape_discrete(labels = c("Mean", "Maximum", "Minimum")) +
                     scale_x_continuous(n.breaks = 8))
 
-ggsave("Figures/diss_figures/climate_plot_year.png", plot = avg_temp_year, 
-       width = 6.5, height = 5.5, units = "in")
+ggsave("Figures/temp_summary_year.png", plot = temp_year_avg, 
+       width = 7.5, height = 6, units = "in")
 
 # adding a mixed effects model to the plot
-temp_month_season <- lmer(temp ~ year + (1|month) + (1|season), data = combo, REML = F)
+temp_model <- lmer(temp ~ year + (1|month) + (1|season), data = combo2, REML = F)
 
-# creating model predictions 
-pred.mm <- ggpredict(temp_month_season, terms = c("year"))  
+pred.mm <- ggpredict(temp_model, terms = c("year"))  
 
-# plotting the predictions 
 (temp_year_model <- ggplot(pred.mm) + 
                       geom_vline(xintercept = minor, color = "grey92") +                   
                       geom_line(aes(x = x, y = predicted), color = "#004452") +   # slope
@@ -404,9 +402,39 @@ pred.mm <- ggpredict(temp_month_season, terms = c("year"))
                       scale_shape_discrete(labels = c("Mean", "Maximum", "Minimum")) +
                       scale_x_continuous(n.breaks = 8))
 
+ggsave("Figures/temp_summary_year_model.png", plot = temp_year_model, 
+       width = 7.5, height = 6, units = "in")
+
 
 # average, minimum and maximum temperature over time (by season) 
-(temp_season_sum <- ggplot(sum_season_na, aes(x = season, y = temp, 
+(temp_season_sum_gap <- ggplot(sum_season_na, aes(x = season, y = temp, 
+                                                  color = type, shape = type)) +
+                          geom_point(size = 2.5) +  
+                          geom_line(aes(group = type)) +
+                          geom_hline(yintercept = 0, linetype = "dashed") +
+                          ylab(label = "Temperature (˚C)") +
+                          xlab(label = "Season") +
+                          climate_theme +
+                          theme(panel.grid.major.x = element_blank(),
+                                legend.title = element_blank(),
+                                axis.text = element_text(size = c(10, 10, 10, 10, 10, 10, 10, 10,
+                                                                  0, 0, 0, 0, 0, 0, 0, 10, 10, 10, 
+                                                                  10, 10, 10, 10, 10, 10, 10, 10, 
+                                                                  10, 10)),
+                                axis.ticks.x = element_line(size = c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
+                                                                     0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 
+                                                                     0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
+                                                                     0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
+                                                                     0.5))) +
+                          scale_color_manual(values = c("#004452", "#B5BA4F", "#FF6D33"),
+                                             labels = c("Mean", "Maximum", "Minimum")) + 
+                          scale_shape_discrete(labels = c("Mean", "Maximum", "Minimum")))
+
+ggsave("Figures/temp_summary_season.png", plot = temp_season_sum_gap, 
+       width = 7.5, height = 6, units = "in")
+
+
+(temp_season_sum <- ggplot(sum_season_long, aes(x = season, y = temp, 
                                                 color = type, shape = type)) +
                       geom_point(size = 2.5) +  
                       geom_line(aes(group = type)) +
@@ -415,23 +443,13 @@ pred.mm <- ggpredict(temp_month_season, terms = c("year"))
                       xlab(label = "Season") +
                       climate_theme +
                       theme(panel.grid.major.x = element_blank(),
-                            legend.title = element_blank(),
-                            axis.text = element_text(size = c(10, 10, 10, 10, 10, 10, 10, 10,
-                                                              0, 0, 0, 0, 0, 0, 0, 10, 10, 10, 
-                                                              10, 10, 10, 10, 10, 10, 10, 10, 
-                                                              10, 10)),
-                            axis.ticks.x = element_line(size = c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
-                                                                 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 
-                                                                 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
-                                                                 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
-                                                                 0.5))) +
+                            legend.title = element_blank()) +
                       scale_color_manual(values = c("#004452", "#B5BA4F", "#FF6D33"),
                                          labels = c("Mean", "Maximum", "Minimum")) + 
                       scale_shape_discrete(labels = c("Mean", "Maximum", "Minimum")))
 
-ggsave("Figures/temp_summary_season.png", plot = temp_season_sum, 
+ggsave("Figures/temp_summary_season_nogap.png", plot = temp_season_sum, 
        width = 7.5, height = 6, units = "in")
-
 
 ## Relative Humidity 
 # rH over time (non-faceted, scatterplot)
