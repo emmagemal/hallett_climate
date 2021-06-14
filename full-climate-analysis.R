@@ -525,7 +525,7 @@ ggsave("Figures/temp_summary_season_nogap.png", plot = temp_season_sum,
 ### Data Visualization - Relative Humidity ----
 # rH over time (non-faceted, boxplot) - FOR PUBLICATION 
 (rh_boxplot_gap <- ggplot(combo_na, aes(x = season, y = rH)) +
-                      geom_boxplot(fill = "#598492") +
+                      geom_boxplot(fill = "#6FB4CC") +
                       ylab(label = "Relative Humidity (%)") +
                       xlab(label = "Season") +
                       climate_theme +
