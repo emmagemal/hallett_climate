@@ -294,30 +294,6 @@ str(season_na)
 combo_na <- full_join(combo, season_na)
 combo_na <- full_join(combo_na, climate1965)
 
-#### could potentially delete everything below and all other summarized bits 
-sum_season_na <- combo_na %>% 
-                    group_by(season) %>% 
-                    summarise(avg_temp = mean(temp),
-                              min_temp = min(temp),
-                              max_temp = max(temp),
-                              avg_rh = mean(rH),
-                              min_rh = min(rH),
-                              max_rh = max(rH))
-
-sum_season_temp_na <- sum_season_na %>% 
-                        dplyr::select(season, avg_temp, min_temp, max_temp)
-sum_season_rh_na <- sum_season_na %>% 
-                      dplyr::select(season, avg_rh, min_rh, max_rh)
-
-sum_season_temp_long <- sum_season_temp %>% 
-                          pivot_longer(cols = c(2:4),
-                                       names_to = "type",
-                                       values_to = "temp")
-sum_season_rh_long <- sum_season_rh %>% 
-                        pivot_longer(cols = c(2:4),
-                                     names_to = "type",
-                                     values_to = "rH")
-
 ### Active Days Calculations ----
 active_combo <- combo2 %>% 
                     filter(temp > -1) %>% 
@@ -425,112 +401,8 @@ ggsave("Figures/boxplot_season_nogap.png", plot = temp_boxplot,
 ggsave("Figures/temp_appendix.png", plot = temp_facet, 
        width = 9, height = 10, units = "in")
 
-
-# average, minimum and maximum temperature over time (by year) 
-minor <- seq(1965, 2015, by = 5)   # making minor gridlines for the plot 
-
-(temp_year_avg <- ggplot(sum_year_temp_long, aes(x = year, y = temp, 
-                                                 color = type, shape = type)) +
-                    geom_vline(xintercept = minor, color = "grey92") +                 
-                    geom_point(size = 2.5) +  
-                    geom_line(aes(group = interaction(type, grouping))) +  # how I added the gap
-                    geom_hline(yintercept = 0, linetype = "dashed") +
-                    ylab(label = "Temperature (˚C)") +
-                    xlab(label = "Year") +
-                    climate_theme + 
-                    theme(panel.grid.minor = element_blank(),
-                          panel.grid.major.x = element_blank(),
-                          legend.title = element_blank()) +
-                    scale_color_manual(values = c("#004452", "#B5BA4F", "#FF6D33"),
-                                       labels = c("Mean", "Maximum", "Minimum")) + 
-                    scale_shape_discrete(labels = c("Mean", "Maximum", "Minimum")) +
-                    scale_x_continuous(n.breaks = 8))
-
-ggsave("Figures/temp_summary_year.png", plot = temp_year_avg, 
-       width = 7.5, height = 6, units = "in")
-
-# adding a mixed effects model to the plot
-temp_model <- lmer(temp ~ year + (1|month) + (1|season), data = combo2, REML = F)
-
-pred.mm <- ggpredict(temp_model, terms = c("year"))  
-
-(temp_year_model <- ggplot(pred.mm) + 
-                      geom_vline(xintercept = minor, color = "grey92") +                   
-                      geom_line(aes(x = x, y = predicted), color = "#004452") +   # slope
-                      geom_ribbon(aes(x = x, ymin = conf.low, 
-                                      ymax = conf.high), 
-                                  fill = "lightgrey", alpha = 0.5) +  # error band
-                      geom_point(size = 2.5, data = sum_year_temp_long, aes(x = year, y = temp, 
-                                                                            color = type, 
-                                                                            shape = type)) +
-                      geom_line(data = sum_year_temp_long, aes(x = year, y = temp, 
-                                                               color = type, 
-                                                               group = interaction(type, 
-                                                                                   grouping))) +
-                      geom_hline(yintercept = 0, linetype = "dashed") +
-                      ylab(label = "Temperature (˚C)") +
-                      xlab(label = "Year") +
-                      climate_theme +
-                      theme(panel.grid.minor = element_blank(),
-                            panel.grid.major.x = element_blank(),
-                            legend.title = element_blank()) +
-                      scale_color_manual(values = c("#004452", "#B5BA4F", "#FF6D33"),
-                                         labels = c("Mean", "Maximum", "Minimum")) + 
-                      scale_shape_discrete(labels = c("Mean", "Maximum", "Minimum")) +
-                      scale_x_continuous(n.breaks = 8))
-
-ggsave("Figures/temp_summary_year_model.png", plot = temp_year_model, 
-       width = 7.5, height = 6, units = "in")
-
-
-# average, minimum and maximum temperature over time (by season) 
-(temp_season_sum_gap <- ggplot(sum_season_na, aes(x = season, y = temp, 
-                                                  color = type, shape = type)) +
-                          geom_point(size = 2.5) +  
-                          geom_line(aes(group = type)) +
-                          geom_hline(yintercept = 0, linetype = "dashed") +
-                          ylab(label = "Temperature (˚C)") +
-                          xlab(label = "Season") +
-                          climate_theme +
-                          theme(panel.grid.major.x = element_blank(),
-                                legend.title = element_blank(),
-                                axis.text = element_text(size = c(10, 10, 10, 10, 10, 10, 10, 10,
-                                                                  0, 0, 0, 0, 0, 0, 0, 10, 10, 10, 
-                                                                  10, 10, 10, 10, 10, 10, 10, 10, 
-                                                                  10, 10)),
-                                axis.ticks.x = element_line(size = c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
-                                                                     0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 
-                                                                     0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
-                                                                     0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
-                                                                     0.5))) +
-                          scale_color_manual(values = c("#004452", "#B5BA4F", "#FF6D33"),
-                                             labels = c("Mean", "Maximum", "Minimum")) + 
-                          scale_shape_discrete(labels = c("Mean", "Maximum", "Minimum")))
-
-ggsave("Figures/temp_summary_season.png", plot = temp_season_sum_gap, 
-       width = 7.5, height = 6, units = "in")
-
-
-(temp_season_sum <- ggplot(sum_season_temp_long, aes(x = season, y = temp, 
-                                                     color = type, shape = type)) +
-                      geom_point(size = 2.5) +  
-                      geom_line(aes(group = type)) +
-                      geom_hline(yintercept = 0, linetype = "dashed") +
-                      ylab(label = "Temperature (˚C)") +
-                      xlab(label = "Season") +
-                      climate_theme +
-                      theme(panel.grid.major.x = element_blank(),
-                            legend.title = element_blank()) +
-                      scale_color_manual(values = c("#004452", "#B5BA4F", "#FF6D33"),
-                                         labels = c("Mean", "Maximum", "Minimum")) + 
-                      scale_shape_discrete(labels = c("Mean", "Maximum", "Minimum")))
-
-ggsave("Figures/temp_summary_season_nogap.png", plot = temp_season_sum, 
-       width = 7.5, height = 6, units = "in")
-
-
 ### Data Visualization - Relative Humidity ----
-# rH over time (non-faceted, boxplot) - FOR PUBLICATION 
+# rH over time (non-faceted, boxplot) 
 (rh_boxplot_gap <- ggplot(combo_na, aes(x = season, y = rH)) +
                       geom_boxplot(fill = "#6FB4CC") +
                       ylab(label = "Relative Humidity (%)") +
@@ -551,7 +423,7 @@ ggsave("Figures/temp_summary_season_nogap.png", plot = temp_season_sum,
 ggsave("Figures/boxplot_season_rH.png", plot = rh_boxplot_gap, 
        width = 7.5, height = 6, units = "in")
 
-# rH over time per season - FOR PUBLICATION APPENDIX ??
+# rH over time per season (faceted)
 (rh_facet <- ggplot(combo2, aes(x = date_time, y = rH, fill = season)) +   
                 geom_line(aes(color = season)) +
                 scale_x_datetime(date_labels = "%b", date_breaks = "1 month") +
