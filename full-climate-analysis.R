@@ -1,5 +1,5 @@
 # Cape Hallett climate data visualization and analysis
-# Emma Gemal, s1758915@sms.ed.ac.uk
+# Emma Gemal, emmagemal@outlook.com
 # University of Edinburgh
 
 ### Library ----
@@ -235,6 +235,13 @@ sum_season <- combo2 %>%
                           min_rh = min(rH),
                           max_rh = max(rH))
 
+# finding SD for mean annual temperature and rH
+year_sd <- sum_year %>% 
+              summarise(avg_temp2 = mean(avg_temp),
+                        avg_rh2 = mean(avg_rh),
+                        sd_temp = sd(avg_temp),
+                        sd_rh = sd(avg_rh))
+
 # splitting the dataframes into temperature and rH
 sum_year_temp <- sum_year %>% 
                     dplyr::select(year, avg_temp, min_temp, max_temp)
@@ -403,7 +410,7 @@ ggsave("Figures/boxplot_season_nogap.png", plot = temp_boxplot,
        width = 7.5, height = 6, units = "in")
 
 
-# temp over time per season - FOR APPENDIX 
+# temp over time per season (faceted)
 (temp_facet <- ggplot(combo2, aes(x = date_time, y = temp, fill = season)) +   
                   geom_line(aes(color = season)) +
                   scale_x_datetime(date_labels = "%b", date_breaks = "1 month") +
